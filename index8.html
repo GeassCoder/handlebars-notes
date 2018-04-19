@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hello Handlebars</title>
+  <script src="handlebars-v4.0.5.js"></script>
+</head>
+<body>
+
+<div id="contentDiv"></div>
+
+<!-- This file is added in the original code series. -->
+
+<script id="the-template" type="text/x-handlebars-template">
+
+{{#list titles}}
+  {{@index}}. {{title}}
+{{/list}}
+
+</script>
+
+<script type="text/javascript">
+
+  var templateInfo = document.getElementById("the-template").innerHTML;
+
+  var template = Handlebars.compile(templateInfo);
+
+  Handlebars.registerHelper('list', function(context, options) {
+    var out = "<ul>", data;
+
+    // When no context object is passed in the template function (see line 67) options.data will be undefined, otherwise options.data.root will BE the context object passed in the tempalte function. 
+    if (options.data) {
+      // In this example, using options.data directly as below will also work, however, it is best practice to create a new data frame when a helper needs to assign its own data (in this case the #list helper needs to assign to data.index), otherwise downstream helpers (consider the case where there are other helpers after the #list helper in our template) might unexpectedly mute upstream variables or be affected by the variables set by the upstream helpers. Generally only one frame needs to be created per helper execution. 
+      // references: 
+      // http://handlebarsjs.com/reference.html
+      // http://handlebarsjs.com/block_helpers.html
+
+      //data = options.data;
+      
+      data = Handlebars.createFrame(options.data);
+    }
+
+    // We can see what the createFrame function does is just make a copy of the passed in object, associate the original object to the copy and return the copy
+    console.log(Handlebars.createFrame);
+
+    // In this case, we cannot pass in the private variables from the second parameter as what we did in index2.html, because the value of private variable @index here is dynamic. Note that we just need to pass in a second parameter to options.fn function, which is similar to passing a second parameter to the template function in index2.html.
+    for (var i=0; i<context.length; i++) {
+      if (data) {
+        data.index = i;
+      }
+
+      out += "<li>" + options.fn(context[i], { data: data }) + "</li>";
+    }
+
+    out += "</ul>";
+    return out;
+  });
+
+  var context = {
+    titles:[
+      {title: "hehe 1"},
+      {title: "hehe 2"},
+      {title: "hehe 3"},
+      {title: "hehe 4"}
+    ]
+  };
+
+  var templateData = template(context);
+
+  document.getElementById('contentDiv').innerHTML += templateData;
+
+</script>
+
+</body>
+</html>
